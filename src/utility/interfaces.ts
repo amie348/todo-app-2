@@ -19,5 +19,4 @@ export interface TaskFormValues {
 export interface TaskInputProps {
   control: Control<TaskFormValues>;
   error?: FieldError;
-  onBlur?: () => void;
 }

@@ -1,6 +1,9 @@
 import { Box, Typography } from '@mui/material';
+import { useTodoStore } from '@src/store/todoStore';
 
 export default function Progress() {
+  const todoStore = useTodoStore();
+
   return (
     <Box
       sx={{
@@ -58,7 +61,8 @@ export default function Progress() {
             color: '#ffffff',
           }}
         >
-          0/0
+          {todoStore.get().filter((task) => task.isCompleted === true).length}/
+          {todoStore.get().length}
         </Typography>
       </Box>
     </Box>

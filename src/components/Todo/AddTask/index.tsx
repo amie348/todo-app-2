@@ -6,6 +6,8 @@ import { hookstate } from '@hookstate/core';
 import { TextField, Button, Box } from '@mui/material';
 import ActionButton from '@components/common/ActionButton';
 import { TaskFormValues, TaskInputProps } from '@utility/interfaces';
+import { useTodoStore } from '@src/store/todoStore';
+import { addTask } from '@src/apis';
 // import { addTodo } from './api'; // Assuming API function in a separate file
 // import { todosState } from './state'; // Global state file for todos
 
@@ -54,24 +56,22 @@ const AddTask: React.FC = () => {
     reset,
     formState: { errors },
   } = useForm<TaskFormValues>();
-  //   const queryClient = useQueryClient();
+  const todoStore = useTodoStore();
 
-  //   const addMutation = useMutation(addTodo, {
-  //     onSuccess: (newTodo) => {
-  //       queryClient.invalidateQueries('todos');
-  //       todosState.merge([newTodo]);
-  //     },
-  //   });
+  const queryClient = useQueryClient();
 
-  //   const onSubmit = (data: TaskFormValues) => {
-  //     addMutation.mutate(data.text);
-  //     reset();
-  //   };
+  const { mutate } = useMutation(addTask, {
+    onSuccess: (newTodo) => {
+      queryClient.invalidateQueries('todos');
+      todoStore.merge([newTodo]);
+      reset();
+    },
+  });
+
+  const onSubmit = (data: TaskFormValues) => mutate({ ...data, isCompleted: false });
 
   return (
     <Box
-      component="form"
-      //   onSubmit={handleSubmit(onSubmit)}
       sx={{
         mt: 4,
         display: 'flex',
@@ -87,7 +87,7 @@ const AddTask: React.FC = () => {
           backgroundColor: '#88ab33',
           borderRadius: '8px',
         }}
-        onClick={() => {}}
+        onClick={handleSubmit(onSubmit)}
         Icon="plus"
       />
     </Box>

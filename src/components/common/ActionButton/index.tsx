@@ -5,11 +5,12 @@ interface ActionButtonProps {
   Icon: string;
   onClick: () => void;
   styles: SxProps<Theme>;
+  type?: 'submit';
 }
 
-export default function ActionButton({ Icon, onClick, styles }: ActionButtonProps) {
+export default function ActionButton({ Icon, onClick, styles, type }: ActionButtonProps) {
   return (
-    <Button onClick={onClick} sx={styles}>
+    <Button type={type} onClick={onClick} sx={styles}>
       <SvgIcon name={Icon} />
     </Button>
   );

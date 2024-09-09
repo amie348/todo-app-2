@@ -1,10 +1,17 @@
 import ActionButton from '@components/common/ActionButton';
-import { Box, Container, TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
+import { deleteTask, updateTask } from '@src/apis';
+import { useTodoStore } from '@src/store/todoStore';
 import { ITask, TaskFormValues, TaskInputProps } from '@utility/interfaces';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useMutation, useQueryClient } from 'react-query';
 
-const TaskInput: React.FC<TaskInputProps> = ({ control, error, onBlur }) => (
+interface EditTaskInputProps extends TaskInputProps {
+  onBlur: () => void;
+}
+
+const TaskInput: React.FC<EditTaskInputProps> = ({ control, error, onBlur }) => (
   <Controller
     name="content"
     control={control}
@@ -17,7 +24,10 @@ const TaskInput: React.FC<TaskInputProps> = ({ control, error, onBlur }) => (
         fullWidth
         error={!!error}
         helperText={error?.message}
-        onBlur={onBlur}
+        onBlur={(e) => {
+          field.onBlur();
+          onBlur();
+        }}
         sx={{
           mr: 2,
           height: 50,
@@ -44,6 +54,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ control, error, onBlur }) => (
 
 export default function Task({ task }: { task: ITask }) {
   const [isEditing, setIsEditing] = useState(false);
+  const todoStore = useTodoStore();
 
   const {
     control,
@@ -54,7 +65,46 @@ export default function Task({ task }: { task: ITask }) {
     defaultValues: { content: task.content },
   });
 
-  const handleFieldEditing = () => setIsEditing(false);
+  const queryClient = useQueryClient();
+
+  const { mutate: update } = useMutation(updateTask, {
+    onSuccess: (updatedTask) => {
+      queryClient.invalidateQueries('todos');
+    },
+  });
+
+  const { mutate: deletetask } = useMutation(deleteTask, {
+    onSuccess: (updatedTask) => {
+      queryClient.invalidateQueries('todos');
+    },
+  });
+
+  const handleUpdateTask = (data: TaskFormValues) => {
+    update({ ...task, content: data.content });
+    todoStore.set((prevTasks) =>
+      prevTasks.map((prevTask) =>
+        prevTask._id === task._id ? { ...prevTask, content: data.content } : prevTask
+      )
+    );
+    setIsEditing(false);
+    reset();
+  };
+
+  const handleBlur = handleSubmit(handleUpdateTask);
+
+  const handleCompleteTask = () => {
+    update({ ...task, isCompleted: !task.isCompleted });
+    todoStore.set((prevTasks) =>
+      prevTasks.map((prevTask) =>
+        prevTask._id === task._id ? { ...prevTask, isCompleted: !prevTask.isCompleted } : prevTask
+      )
+    );
+  };
+
+  const handleDeleteTask = () => {
+    deletetask(task._id as string);
+    todoStore.set((prevTasks) => prevTasks.filter((prevTask) => prevTask._id !== task._id));
+  };
 
   return (
     <Box
@@ -66,7 +116,15 @@ export default function Task({ task }: { task: ITask }) {
       }}
     >
       {isEditing ? (
-        <TaskInput control={control} error={errors.content} onBlur={handleFieldEditing} />
+        <Box
+          component="form"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <TaskInput control={control} error={errors.content} onBlur={handleBlur} />
+        </Box>
       ) : (
         <Box
           sx={{
@@ -83,7 +141,7 @@ export default function Task({ task }: { task: ITask }) {
           >
             <ActionButton
               Icon={task.isCompleted ? 'filledcircle' : 'circle'}
-              onClick={() => {}}
+              onClick={handleCompleteTask}
               styles={{ minWidth: '0px' }}
             />
             <Typography
@@ -96,7 +154,7 @@ export default function Task({ task }: { task: ITask }) {
               }}
             >
               {task.content}
-            </Typography>{' '}
+            </Typography>
           </Box>
           <Box
             sx={{
@@ -109,7 +167,7 @@ export default function Task({ task }: { task: ITask }) {
               onClick={() => setIsEditing(true)}
               styles={{ minWidth: '0px' }}
             />
-            <ActionButton Icon="delete" onClick={() => {}} styles={{ minWidth: '0px' }} />
+            <ActionButton Icon="delete" onClick={handleDeleteTask} styles={{ minWidth: '0px' }} />
           </Box>
         </Box>
       )}

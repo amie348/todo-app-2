@@ -21,6 +21,7 @@
       "@common/*": ["components/common/*"],
       "@pages/*": ["pages/*"],
       "@utility/*": ["utility/*"],
+      "@sotre/*": ["sotre/*"],
       "@src/*": ["./*"]
     }
   },

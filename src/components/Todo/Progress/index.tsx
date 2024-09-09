@@ -7,7 +7,6 @@ export default function Progress() {
         display: 'flex',
         justifyContent: 'space-between',
         height: '176px',
-        width: '450px',
         border: '1px solid #C2B39A',
         borderRadius: '10px',
         marginLeft: '',
